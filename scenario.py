@@ -28,7 +28,7 @@ from mpds_ml_labs.cif_utils import ase_to_eq_cif
 
 supported_arities = {1: 'unary', 2: 'binary', 3: 'ternary', 4: 'quaternary', 5: 'quinary'}
 
-supported_aninitio_props = {
+supported_abinitio_props = {
     'heat_capacity': {
         'name': 'heat capacity at constant pressure',
         'rounding': 1,
@@ -156,7 +156,7 @@ def get_ab_initio_props(ase_obj):
         print("Getting the result from AiiDA cache")
         return available[fingerprint]
 
-    tpl = deepcopy(supported_aninitio_props)
+    tpl = deepcopy(supported_abinitio_props)
     for prop in tpl:
         tpl[prop]['factual'] = 42
 
@@ -181,7 +181,7 @@ def get_machine_learning_props(ase_obj):
     for prop_id in output['prediction']:
         if not mapping_ml_abinitio.get(prop_id):
             continue
-        tpl.update({mapping_ml_abinitio[prop_id]: supported_aninitio_props[mapping_ml_abinitio[prop_id]]})
+        tpl.update({mapping_ml_abinitio[prop_id]: supported_abinitio_props[mapping_ml_abinitio[prop_id]]})
         tpl[mapping_ml_abinitio[prop_id]]['factual'] = output['prediction'][prop_id]['value']
 
     return tpl
@@ -195,8 +195,8 @@ def get_peer_reviewed_props(ase_obj=None, phase_id=None):
     if ase_obj:
         query = dict(formulae=get_formula(ase_obj), sgs=ase_obj.info['spacegroup'].no)
 
-    for prop in supported_aninitio_props:
-        query['props'] = supported_aninitio_props[prop]['name']
+    for prop in supported_abinitio_props:
+        query['props'] = supported_abinitio_props[prop]['name']
         try:
             outdf = mpds_api.get_dataframe(
                 query,
@@ -219,12 +219,12 @@ def get_peer_reviewed_props(ase_obj=None, phase_id=None):
 
         time.sleep(3) # to decrease request rate
 
-        if supported_aninitio_props[prop]['units']:
-            outdf = outdf[outdf['Units'] == supported_aninitio_props[prop]['units']]
+        if supported_abinitio_props[prop]['units']:
+            outdf = outdf[outdf['Units'] == supported_abinitio_props[prop]['units']]
         if outdf.empty:
             continue
         outdf['Value'] = outdf['Value'].astype('float64') # NB to treat values out of JSON bounds given as str
-        tpl.update({prop: supported_aninitio_props[prop]})
+        tpl.update({prop: supported_abinitio_props[prop]})
         tpl[prop]['factual'] = np.median(outdf['Value'])
 
     return tpl
