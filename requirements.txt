@@ -1,4 +1,3 @@
 httplib2==0.11.3
 mpds_client>=0.0.21
-numpy
-mpds_ml_labs==0.0.5
+git+https://github.com/mpds-io/mpds-ml-labs.git#egg=mpds_ml_labs
