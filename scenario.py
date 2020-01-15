@@ -80,6 +80,8 @@ mapping_ml_abinitio = {
     'z': 'bulk_modulus',
     'x': 'heat_capacity',
     'w': 'direct_band_gap'
+    # 'enthalpy of formation'
+    # 'linear thermal expansion coefficient'
 }
 
 CACHE_FILE = os.path.dirname(
@@ -139,14 +141,8 @@ def get_ab_initio_props(ase_obj):
     This is the mock-up, showing memoization
     of the MPDS phases inside AiiDA
     """
-    # Option I. So far used
-    formulae = get_formula(ase_obj)
-    sgs = ase_obj.info['spacegroup'].no
-    fingerprint = "%s-%s" % (formulae, sgs)
-
-    # Option II. More robust
-    #assert 'phase' in ase_obj.info
-    #fingerprint = ase_obj.info['phase']
+    assert 'phase' in ase_obj.info
+    fingerprint = ase_obj.info['phase']
 
     f = open(CACHE_FILE)
     available = json.loads(f.read()) or {}
@@ -231,9 +227,6 @@ def get_peer_reviewed_props(ase_obj=None, phase_id=None):
 
 
 if __name__ == "__main__":
-    """
-    Main procedure
-    """
     if len(sys.argv) > 1:
         elements = sys.argv[1:]
     else:
@@ -256,7 +249,6 @@ if __name__ == "__main__":
         minimal_struct = min([len(s) for s in sg_cls])
 
         # get structures with the minimal number of atoms and find the one with median cell vectors
-        # proposed by @as
         cells = np.array([s.get_cell().reshape(9) for s in sg_cls if len(s) == minimal_struct])
         median_cell = np.median(cells, axis=0)
         median_idx = int(np.argmin(np.sum((cells - median_cell)**2, axis=1)**0.5))
@@ -266,7 +258,7 @@ if __name__ == "__main__":
         results = {}
         results['ab_initio'] = get_ab_initio_props(target_obj)
         results['machine_learning'] = get_machine_learning_props(target_obj)
-        time.sleep(1) # to decrease request rate
+        time.sleep(3) # to decrease request rate
         results['peer_reviewed'] = get_peer_reviewed_props(phase_id=target_obj.info['phase_id'])
         #results['peer_reviewed'] = get_peer_reviewed_props(target_obj)
         pprint(results)
